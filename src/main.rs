@@ -1,8 +1,9 @@
 use bevy::{
     prelude::*,
     sprite::MaterialMesh2dBundle,
-    window::PresentMode
+    window::PresentMode,
 };
+use bevy_window::PrimaryWindow;
 
 const BOUNDS: Vec2 = Vec2::new(800.0, 640.0);
 
@@ -51,22 +52,16 @@ fn setup_ball(
 fn ball_movement(
     mut ball_position: Query<(&mut Ball, &mut Transform)>,
     mut cursor_moved_events: EventReader<CursorMoved>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
+    
+    let window = window_query.get_single().unwrap();
+
     if let Ok((mut _ball, mut transform)) = ball_position.get_single_mut() {
         for event in cursor_moved_events.iter() {
-            transform.translation.x = event.position.x - BOUNDS.x / 2.;
-            transform.translation.y = event.position.y - BOUNDS.y / 2.;
+            transform.translation.x = event.position.x - window.width() / 2.;
+            transform.translation.y = event.position.y - window.height() / 2.;
         }
-        // if transform.translation.x >= BOUNDS.x {
-        //     ball.direction = Direction::WEST;
-        // } else if transform.translation.x <= -BOUNDS.x {
-        //     ball.direction = Direction::EAST;
-        // }
-
-        // match ball.direction {
-        //     Direction::WEST => transform.translation.x -= 1.,
-        //     Direction::EAST => transform.translation.x += 1.,
-        // }
     }
 }
 
@@ -77,7 +72,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                title: "I am a window!".into(),
+                title: "Bumi".into(),
                 resolution: (BOUNDS.x, BOUNDS.y).into(),
                 present_mode: PresentMode::AutoVsync,
                 prevent_default_event_handling: false,
