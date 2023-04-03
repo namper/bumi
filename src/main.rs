@@ -13,15 +13,9 @@ struct Name(String);
 #[derive(Component)]
 struct Person;
 
-enum Direction {
-    WEST,
-    EAST,
-}
-
 #[derive(Component)]
-struct Ball {
-    direction: Direction,
-}
+struct Ball;
+
 pub struct BallPlugin;
 
 impl Plugin for BallPlugin {
@@ -34,13 +28,19 @@ fn setup_ball(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
-    commands.spawn(Camera2dBundle::default());
+    let window = window_query.get_single().unwrap();
+
+    commands.spawn(Camera2dBundle{
+        transform: Transform::from_xyz(window.width() / 2., window.height() / 2., 0.),
+        ..default()
+    });
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes.add(shape::Circle::new(50.).into()).into(),
             material: materials.add(ColorMaterial::from(Color::PURPLE)),
-            transform: Transform::from_xyz(0. - BOUNDS.x, 0., 0.),
+            transform: Transform::from_xyz(window.width() / 2., window.height() / 2., 0.),
             ..default()
         },
         Ball {
@@ -59,14 +59,11 @@ fn ball_movement(
 
     if let Ok((mut _ball, mut transform)) = ball_position.get_single_mut() {
         for event in cursor_moved_events.iter() {
-            transform.translation.x = event.position.x - window.width() / 2.;
-            transform.translation.y = event.position.y - window.height() / 2.;
+            transform.translation.x = event.position.x;
+            transform.translation.y = event.position.y;
         }
     }
 }
-
-#[derive(Resource)]
-struct GreetTimer(Timer);
 
 fn main() {
     App::new()
