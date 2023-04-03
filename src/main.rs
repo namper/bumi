@@ -1,4 +1,8 @@
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle, window::PresentMode};
+use bevy::{
+    prelude::*,
+    sprite::MaterialMesh2dBundle,
+    window::PresentMode
+};
 
 const BOUNDS: Vec2 = Vec2::new(800.0, 640.0);
 
@@ -44,18 +48,25 @@ fn setup_ball(
     ));
 }
 
-fn ball_movement(mut ball_position: Query<(&mut Ball, &mut Transform)>) {
-    for (mut ball, mut transform) in &mut ball_position {
-        if transform.translation.x >= BOUNDS.x {
-            ball.direction = Direction::WEST;
-        } else if transform.translation.x <= -BOUNDS.x {
-            ball.direction = Direction::EAST;
+fn ball_movement(
+    mut ball_position: Query<(&mut Ball, &mut Transform)>,
+    mut cursor_moved_events: EventReader<CursorMoved>,
+) {
+    if let Ok((mut _ball, mut transform)) = ball_position.get_single_mut() {
+        for event in cursor_moved_events.iter() {
+            transform.translation.x = event.position.x - BOUNDS.x / 2.;
+            transform.translation.y = event.position.y - BOUNDS.y / 2.;
         }
+        // if transform.translation.x >= BOUNDS.x {
+        //     ball.direction = Direction::WEST;
+        // } else if transform.translation.x <= -BOUNDS.x {
+        //     ball.direction = Direction::EAST;
+        // }
 
-        match ball.direction {
-            Direction::WEST => transform.translation.x -= 1.,
-            Direction::EAST => transform.translation.x += 1.,
-        }
+        // match ball.direction {
+        //     Direction::WEST => transform.translation.x -= 1.,
+        //     Direction::EAST => transform.translation.x += 1.,
+        // }
     }
 }
 
