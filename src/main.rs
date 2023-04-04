@@ -7,44 +7,70 @@ const BOUNDS: Vec2 = Vec2::new(800.0, 640.0);
 struct MainCamera;
 
 #[derive(Component)]
-struct Ball;
+struct Knot;
 
-pub struct BallPlugin;
+#[derive(Component)]
+struct HeadKnot;
 
-impl Plugin for BallPlugin {
+#[derive(Component)]
+struct Rope {
+    chain: Vec<Knot>,
+}
+
+pub struct RopePlugin;
+
+impl Plugin for RopePlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup_ball).add_system(ball_movement);
+        app.add_startup_system(setup_knots).add_system(knot_movement);
     }
 }
 
-fn setup_ball(
+fn setup_knots(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
+    window_q: Query<&Window, With<PrimaryWindow>>,
+    // rope_q: Query<&Rope>,
 ) {
-    let window = window_query.single();
+    commands.spawn((Camera2dBundle::default(), MainCamera));
+    let window = window_q.single();
+    // let rope = rope_q.single();
 
+    // for _ in &rope.chain[1..] {
+    //     commands.spawn((
+    //         MaterialMesh2dBundle {
+    //             mesh: meshes.add(shape::Circle::new(50.).into()).into(),
+    //             material: materials.add(ColorMaterial::from(Color::PURPLE)),
+    //             transform: Transform::from_xyz(window.width() / 2., window.height() / 2., 0.),
+    //             ..default()
+    //         },
+    //         Knot,
+    //     ));
+    // }
+    //
     commands.spawn((
-        Camera2dBundle {
-            transform: Transform::from_xyz(window.width() / 2., window.height() / 2., 0.),
+        MaterialMesh2dBundle {
+            mesh: meshes.add(shape::Circle::new(20.).into()).into(),
+            material: materials.add(ColorMaterial::from(Color::GREEN)),
+            transform: Transform::from_xyz(window.width() / 3., window.height() / 2., 0.),
             ..default()
         },
-        MainCamera,
+        Knot
     ));
+
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes.add(shape::Circle::new(50.).into()).into(),
             material: materials.add(ColorMaterial::from(Color::PURPLE)),
-            transform: Transform::from_xyz(window.width() / 2., window.height() / 2., 0.),
+            transform: Transform::from_xyz(window.width() / 2., window.height() / 2., 1.),
             ..default()
         },
-        Ball,
+        (Knot, HeadKnot)
     ));
 }
 
-fn ball_movement(
-    mut ball_q: Query<(&mut Ball, &mut Transform)>,
+fn knot_movement(
+    mut knot_q: Query<(&mut Knot, &mut Transform), With<HeadKnot>>,
     primary_window_q: Query<&Window, With<PrimaryWindow>>,
     main_camera_q: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
@@ -59,7 +85,7 @@ fn ball_movement(
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .map(|ray| ray.origin.truncate())
     {
-        if let Ok((mut _ball, mut transform)) = ball_q.get_single_mut() {
+        if let Ok((_, mut transform)) = knot_q.get_single_mut() {
             transform.translation.x = world_position.x;
             transform.translation.y = world_position.y;
         }
@@ -78,6 +104,6 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugin(BallPlugin)
+        .add_plugin(RopePlugin)
         .run();
 }
